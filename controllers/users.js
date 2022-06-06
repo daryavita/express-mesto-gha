@@ -9,7 +9,7 @@ const getUsers = (_, res) => {
     .catch(() => {
       res
         .status(500)
-        .send({ message: 'Server error' });
+        .send({ message: 'Ошибка сервера' });
     });
 };
 
@@ -30,7 +30,7 @@ const getUser = (req, res) => {
     .catch(() => {
       res
         .status(500)
-        .send({ message: 'Server error' });
+        .send({ message: 'Ошибка сервера' });
     });
 };
 
@@ -40,12 +40,19 @@ const createUser = (req, res) => {
   user
     .create({ name, about, avatar })
     .then((users) => {
+      if (!name || !about || !avatar) {
+        res
+          .status(400)
+          .send({ message: 'Переданы некорректные данные при создании пользователя.' });
+        return;
+      }
+
       res.send({ data: users });
     })
     .catch(() => {
       res
         .status(500)
-        .send({ message: 'Server error' });
+        .send({ message: 'Ошибка сервера' });
     });
 };
 
@@ -60,7 +67,7 @@ const updateUser = (req, res) => {
     .catch(() => {
       res
         .status(500)
-        .send({ message: 'Server error' });
+        .send({ message: 'Ошибка сервера' });
     });
 };
 
@@ -75,7 +82,7 @@ const updateAvatar = (req, res) => {
     .catch(() => {
       res
         .status(500)
-        .send({ message: 'Server error' });
+        .send({ message: 'Ошибка сервера' });
     });
 };
 
