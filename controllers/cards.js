@@ -6,10 +6,16 @@ const getCards = (_, res) => {
     .then((cards) => {
       res.status(200).send(cards);
     })
-    .catch(() => {
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(400).send({
+          message: 'Переданы некорректные данные при создании карточки.',
+        });
+        return;
+      }
       res
         .status(500)
-        .send({ message: 'Server error' });
+        .send({ message: 'Ошибка сервера' });
     });
 };
 
@@ -20,16 +26,16 @@ const deleteCard = (req, res) => {
       if (!cards) {
         res
           .status(404)
-          .send({ message: 'Card not found' });
+          .send({ message: 'Карточка с указанным id не найдена.' });
         return;
       }
 
-      res.status(200).send('Card has been deleted');
+      res.status(200).send('Карточка удалена');
     })
     .catch(() => {
       res
         .status(500)
-        .send({ message: 'Server error' });
+        .send({ message: 'Ошибка сервера' });
     });
 };
 
@@ -49,10 +55,16 @@ const createCard = (req, res) => {
 
       res.send({ data: cards });
     })
-    .catch(() => {
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(400).send({
+          message: 'Переданы некорректные данные при создании карточки.',
+        });
+        return;
+      }
       res
         .status(500)
-        .send({ message: 'Server error' });
+        .send({ message: 'Ошибка сервера' });
     });
 };
 
@@ -63,12 +75,24 @@ const likeCard = (req, res) => {
     { new: true },
   )
     .then((cards) => {
+      if (!cards) {
+        res
+          .status(404)
+          .send({ message: 'Карточка с указанным id не найдена.' });
+        return;
+      }
       res.send({ data: cards });
     })
-    .catch(() => {
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(400).send({
+          message: 'Переданы некорректные данные для постановки лайка.',
+        });
+        return;
+      }
       res
         .status(500)
-        .send({ message: 'Server error' });
+        .send({ message: 'Ошибка сервера' });
     });
 };
 
@@ -79,12 +103,24 @@ const dislikeCard = (req, res) => {
     { new: true },
   )
     .then((cards) => {
+      if (!cards) {
+        res
+          .status(404)
+          .send({ message: 'Карточка с указанным id не найдена.' });
+        return;
+      }
       res.send({ data: cards });
     })
-    .catch(() => {
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(400).send({
+          message: 'Переданы некорректные данные для снятия лайка.',
+        });
+        return;
+      }
       res
         .status(500)
-        .send({ message: 'Server error' });
+        .send({ message: 'Ошибка сервера' });
     });
 };
 
