@@ -78,9 +78,8 @@ const updateUser = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(400).send({
-          message: 'Переданы некорректные данные при обновлении профиля.',
-        });
+        const fields = Object.keys(err.errors).join(', ');
+        res.status(400).send({ message: `${fields} некорректно` });
         return;
       }
       res.status(500).send({ message: 'Ошибка сервера' });
