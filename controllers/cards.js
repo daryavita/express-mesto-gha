@@ -30,9 +30,13 @@ const deleteCard = (req, res) => {
         return;
       }
 
-      res.status(200).send('Карточка удалена');
+      res.status(200).send({ message: 'Карточка удалена' });
     })
-    .catch(() => {
+    .catch((err) => {
+      if (err.kind === 'ObjectId') {
+        res.status(400).send({ message: 'Некорректный id' });
+        return;
+      }
       res
         .status(500)
         .send({ message: 'Ошибка сервера' });
@@ -49,7 +53,7 @@ const createCard = (req, res) => {
       if (!name || !link) {
         res
           .status(404)
-          .send({ message: 'Name or link not found' });
+          .send({ message: 'Переданы некорректные данные при создании карточки.' });
         return;
       }
 
@@ -90,6 +94,10 @@ const likeCard = (req, res) => {
         });
         return;
       }
+      if (err.kind === 'ObjectId') {
+        res.status(400).send({ message: 'Некорректный id' });
+        return;
+      }
       res
         .status(500)
         .send({ message: 'Ошибка сервера' });
@@ -116,6 +124,10 @@ const dislikeCard = (req, res) => {
         res.status(400).send({
           message: 'Переданы некорректные данные для снятия лайка.',
         });
+        return;
+      }
+      if (err.kind === 'ObjectId') {
+        res.status(400).send({ message: 'Некорректный id' });
         return;
       }
       res
