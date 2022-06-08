@@ -3,8 +3,8 @@ const Сard = require('../models/card');
 const getCards = (req, res) => {
   Сard
     .find({})
-    .then((card) => {
-      res.status.send(card);
+    .then((cards) => {
+      res.send(cards);
     })
     .catch(() => {
       res
@@ -24,7 +24,7 @@ const deleteCard = (req, res) => {
         return;
       }
 
-      res.status.send({ message: 'Карточка удалена' });
+      res.send({ message: 'Карточка удалена' });
     })
     .catch((err) => {
       if (err.kind === 'ObjectId') {

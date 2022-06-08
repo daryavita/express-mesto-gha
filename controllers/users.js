@@ -4,7 +4,7 @@ const getUsers = (req, res) => {
   User
     .find({})
     .then((user) => {
-      res.status(200).send(user);
+      res.send(user);
     })
     .catch(() => {
       res.status(500).send({ message: 'Ошибка сервера' });
@@ -23,7 +23,7 @@ const getUser = (req, res) => {
           .send({ message: 'Пользователь по указанному id не найден' });
         return;
       }
-      res.status(200).send(user);
+      res.send(user);
     })
     .catch((err) => {
       if (err.kind === 'ObjectId') {
