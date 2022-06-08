@@ -8,9 +8,6 @@ const { cardRouter } = require('./routes/cards');
 
 const app = express();
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
   useNewUrlParser: true,
   useCreateIndex: true,
@@ -18,6 +15,8 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
   useUnifiedTopology: true,
 });
 
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use((req, res, next) => {
   req.user = {
     _id: '629b93b068272d09401bc7a5',
@@ -28,7 +27,7 @@ app.use((req, res, next) => {
 
 app.use('/users', userRouter);
 app.use('/cards', cardRouter);
-app.use((_, res) => {
+app.use((req, res) => {
   res.status(404).send({ message: 'Такая страница не найдена' });
 });
 

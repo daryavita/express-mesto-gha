@@ -1,18 +1,12 @@
-const card = require('../models/card');
+const Сard = require('../models/card');
 
-const getCards = (_, res) => {
-  card
+const getCards = (req, res) => {
+  Сard
     .find({})
-    .then((cards) => {
-      res.status(200).send(cards);
+    .then((card) => {
+      res.status.send(card);
     })
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(400).send({
-          message: 'Переданы некорректные данные при создании карточки.',
-        });
-        return;
-      }
+    .catch(() => {
       res
         .status(500)
         .send({ message: 'Ошибка сервера' });
@@ -20,17 +14,17 @@ const getCards = (_, res) => {
 };
 
 const deleteCard = (req, res) => {
-  card
+  Сard
     .findByIdAndRemove(req.params.cardId)
-    .then((cards) => {
-      if (!cards) {
+    .then((card) => {
+      if (!card) {
         res
           .status(404)
           .send({ message: 'Карточка с указанным id не найдена.' });
         return;
       }
 
-      res.status(200).send({ message: 'Карточка удалена' });
+      res.status.send({ message: 'Карточка удалена' });
     })
     .catch((err) => {
       if (err.kind === 'ObjectId') {
@@ -47,17 +41,10 @@ const createCard = (req, res) => {
   const { name, link } = req.body;
   const owner = req.user._id;
 
-  card
+  Сard
     .create({ name, link, owner })
-    .then((cards) => {
-      if (!name || !link) {
-        res
-          .status(404)
-          .send({ message: 'Переданы некорректные данные при создании карточки.' });
-        return;
-      }
-
-      res.send({ data: cards });
+    .then((card) => {
+      res.send({ data: card });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -73,27 +60,21 @@ const createCard = (req, res) => {
 };
 
 const likeCard = (req, res) => {
-  card.findByIdAndUpdate(
+  Сard.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
-    .then((cards) => {
-      if (!cards) {
+    .then((card) => {
+      if (!card) {
         res
           .status(404)
           .send({ message: 'Карточка с указанным id не найдена.' });
         return;
       }
-      res.send({ data: cards });
+      res.send({ data: card });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(400).send({
-          message: 'Переданы некорректные данные для постановки лайка.',
-        });
-        return;
-      }
       if (err.kind === 'ObjectId') {
         res.status(400).send({ message: 'Некорректный id' });
         return;
@@ -105,27 +86,21 @@ const likeCard = (req, res) => {
 };
 
 const dislikeCard = (req, res) => {
-  card.findByIdAndUpdate(
+  Сard.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: req.user._id } },
     { new: true },
   )
-    .then((cards) => {
-      if (!cards) {
+    .then((card) => {
+      if (!card) {
         res
           .status(404)
           .send({ message: 'Карточка с указанным id не найдена.' });
         return;
       }
-      res.send({ data: cards });
+      res.send({ data: card });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(400).send({
-          message: 'Переданы некорректные данные для снятия лайка.',
-        });
-        return;
-      }
       if (err.kind === 'ObjectId') {
         res.status(400).send({ message: 'Некорректный id' });
         return;
