@@ -3,8 +3,8 @@ const User = require('../models/user');
 const getUsers = (req, res) => {
   User
     .find({})
-    .then((user) => {
-      res.send(user);
+    .then((users) => {
+      res.send(users);
     })
     .catch(() => {
       res.status(500).send({ message: 'Ошибка сервера' });
@@ -16,14 +16,14 @@ const getUser = (req, res) => {
 
   User
     .findById(id)
-    .then((users) => {
-      if (!users) {
+    .then((user) => {
+      if (!user) {
         res
           .status(404)
           .send({ message: 'Пользователь по указанному id не найден' });
         return;
       }
-      res.send(users);
+      res.send(user);
     })
     .catch((err) => {
       if (err.kind === 'ObjectId') {
