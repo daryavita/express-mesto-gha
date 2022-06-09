@@ -16,14 +16,14 @@ const getUser = (req, res) => {
 
   User
     .findById(id)
-    .then((user) => {
-      if (!user) {
+    .then((users) => {
+      if (!users) {
         res
           .status(404)
           .send({ message: 'Пользователь по указанному id не найден' });
         return;
       }
-      res.send(user);
+      res.send(users);
     })
     .catch((err) => {
       if (err.kind === 'ObjectId') {
@@ -72,7 +72,7 @@ const updateUser = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(404).send({ message: 'Указан некорректный id' });
+        res.status(400).send({ message: 'Указан некорректный id' });
         return;
       }
       if (err.name === 'ValidationError') {
@@ -101,7 +101,7 @@ const updateAvatar = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(404).send({ message: 'Указан некорректный id' });
+        res.status(400).send({ message: 'Указан некорректный id' });
         return;
       }
       if (err.name === 'ValidationError') {
