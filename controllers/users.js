@@ -1,116 +1,148 @@
+const bcrypt = require('bcrypt');
+
+const { generateToken } = require('../middlewares/auth');
+
 const User = require('../models/user');
 
-const getUsers = (req, res) => {
-  User
-    .find({})
+const saltRounds = 10;
+const MONGO_DUPLICATE_KEY_CODE = 11000;
+
+const getUsers = (req, res, next) => {
+  User.find({})
     .then((users) => {
       res.send(users);
     })
-    .catch(() => {
-      res.status(500).send({ message: 'Ошибка сервера' });
+    .catch((err) => {
+      next(err);
     });
 };
 
-const getUser = (req, res) => {
+const getUser = (req, res, next) => {
   const { id } = req.params;
 
-  User
-    .findById(id)
+  User.findById(id)
     .then((user) => {
       if (!user) {
-        res
-          .status(404)
-          .send({ message: 'Пользователь по указанному id не найден' });
-        return;
+        const err = new Error('Пользователь по указанному id не найден');
+        err.statusCode = 404;
+        throw err;
       }
       res.send(user);
     })
     .catch((err) => {
-      if (err.kind === 'ObjectId') {
-        res.status(400).send({ message: 'Некорректный id' });
-        return;
-      }
-
-      res.status(500).send({ message: 'Ошибка сервера' });
+      next(err);
     });
 };
 
-const createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-
-  User
-    .create({ name, about, avatar })
-    .then((user) => {
-      res.send({ data: user });
-    })
+const getUserProfile = (req, res, next) => {
+  User.findById(req.user.id)
+    .then((user) => res.send(user))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(400).send({
-          message: 'Переданы некорректные данные при создании пользователя.',
-        });
-        return;
-      }
-
-      res.status(500).send({ message: 'Ошибка сервера' });
+      next(err);
     });
 };
 
-const updateUser = (req, res) => {
-  const id = req.user._id;
+const createUser = (req, res, next) => {
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
+
+  if (!email || !password) {
+    const err = new Error('Email и пароль обязательны');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  bcrypt.hash(password, saltRounds).then((hash) => {
+    User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hash,
+    })
+      .then((user) => {
+        res.send({ user });
+      })
+      .catch((err) => {
+        if (err.code === MONGO_DUPLICATE_KEY_CODE) {
+          const duplicateError = new Error('Этот email уже зарегистрирован');
+          duplicateError.statusCode = 409;
+          return next(duplicateError);
+        }
+
+        return next(err);
+      });
+  });
+};
+
+const updateUser = (req, res, next) => {
+  const { id } = req.user;
   const { name, about } = req.body;
 
-  User
-    .findByIdAndUpdate(id, { name, about }, { new: true, runValidators: true })
+  User.findByIdAndUpdate(
+    id,
+    { name, about },
+    { new: true, runValidators: true },
+  )
     .then((user) => {
       if (!user) {
-        res
-          .status(404)
-          .send({ message: 'Пользователь по указанному id не найден' });
-        return;
+        const err = new Error('Пользователь по указанному id не найден');
+        err.statusCode = 404;
+        throw err;
       }
       res.send({ data: user });
     })
     .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(400).send({ message: 'Указан некорректный id' });
-        return;
-      }
-      if (err.name === 'ValidationError') {
-        const fields = Object.keys(err.errors).join(', ');
-        res.status(400).send({ message: `${fields} некорректно` });
-        return;
-      }
-      res.status(500).send({ message: 'Ошибка сервера' });
+      next(err);
     });
 };
 
-const updateAvatar = (req, res) => {
-  const id = req.user._id;
+const updateAvatar = (req, res, next) => {
+  const { id } = req.user;
   const { avatar } = req.body;
 
-  User
-    .findByIdAndUpdate(id, { avatar }, { new: true, runValidators: true })
+  User.findByIdAndUpdate(id, { avatar }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
-        res
-          .status(404)
-          .send({ message: 'Пользователь по указанному id не найден' });
-        return;
+        const err = new Error('Пользователь по указанному id не найден');
+        err.statusCode = 404;
+        throw err;
       }
       res.send({ data: user });
     })
     .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(400).send({ message: 'Указан некорректный id' });
-        return;
+      next(err);
+    });
+};
+
+const login = (req, res, next) => {
+  const { email, password } = req.body;
+
+  User.findOne({ email })
+    .select('+password')
+    .then((user) => {
+      if (!user) {
+        const err = new Error('Email или пароль неверный');
+        err.statusCode = 400;
+        throw err;
       }
-      if (err.name === 'ValidationError') {
-        res.status(400).send({
-          message: 'Переданы некорректные данные при обновлении профиля.',
-        });
-        return;
+
+      const isPasswordValid = bcrypt.compare(password, user.password);
+
+      return Promise.all([isPasswordValid, user]);
+    })
+    .then(([isPasswordValid, user]) => {
+      if (!isPasswordValid) {
+        const err = new Error('Email или пароль неверный');
+        err.statusCode = 401;
+        throw err;
       }
-      res.status(500).send({ message: 'Ошибка сервера' });
+      return generateToken({ id: user._id });
+    })
+    .then((token) => res.send({ token }))
+    .catch((err) => {
+      next(err);
     });
 };
 
@@ -120,4 +152,6 @@ module.exports = {
   createUser,
   updateUser,
   updateAvatar,
+  login,
+  getUserProfile,
 };

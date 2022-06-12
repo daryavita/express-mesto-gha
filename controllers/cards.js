@@ -1,45 +1,43 @@
 const Сard = require('../models/card');
 
-const getCards = (req, res) => {
+const getCards = (req, res, next) => {
   Сard
     .find({})
     .then((cards) => {
       res.send(cards);
     })
-    .catch(() => {
-      res
-        .status(500)
-        .send({ message: 'Ошибка сервера' });
+    .catch((err) => {
+      next(err);
     });
 };
 
-const deleteCard = (req, res) => {
+const deleteCard = (req, res, next) => {
   Сard
-    .findByIdAndRemove(req.params.cardId)
+    .findById(req.params.cardId)
     .then((card) => {
       if (!card) {
-        res
-          .status(404)
-          .send({ message: 'Карточка с указанным id не найдена.' });
-        return;
+        const err = new Error('Карточка не найдена');
+        err.statusCode = 404;
+        throw err;
       }
-
-      res.send({ message: 'Карточка удалена' });
+      const owner = card.owner.toString();
+      if (owner !== req.user.id) {
+        const err = new Error('Вы не можете удалить чужую карточку');
+        err.statusCode = 403;
+        throw err;
+      }
+      Сard.findByIdAndRemove(req.params.cardId).then(() => {
+        res.send({ message: 'Карточка удалена' });
+      });
     })
     .catch((err) => {
-      if (err.kind === 'ObjectId') {
-        res.status(400).send({ message: 'Некорректный id' });
-        return;
-      }
-      res
-        .status(500)
-        .send({ message: 'Ошибка сервера' });
+      next(err);
     });
 };
 
-const createCard = (req, res) => {
+const createCard = (req, res, next) => {
   const { name, link } = req.body;
-  const owner = req.user._id;
+  const owner = req.user.id;
 
   Сard
     .create({ name, link, owner })
@@ -47,67 +45,47 @@ const createCard = (req, res) => {
       res.send({ data: card });
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(400).send({
-          message: 'Переданы некорректные данные при создании карточки.',
-        });
-        return;
-      }
-      res
-        .status(500)
-        .send({ message: 'Ошибка сервера' });
+      next(err);
     });
 };
 
-const likeCard = (req, res) => {
-  Сard.findByIdAndUpdate(
-    req.params.cardId,
-    { $addToSet: { likes: req.user._id } },
-    { new: true },
-  )
+const likeCard = (req, res, next) => {
+  Сard
+    .findByIdAndUpdate(
+      req.params.cardId,
+      { $addToSet: { likes: req.user._id } },
+      { new: true },
+    )
     .then((card) => {
       if (!card) {
-        res
-          .status(404)
-          .send({ message: 'Карточка с указанным id не найдена.' });
-        return;
+        const err = new Error('Карточка не найдена');
+        err.statusCode = 404;
+        throw err;
       }
       res.send({ data: card });
     })
     .catch((err) => {
-      if (err.kind === 'ObjectId') {
-        res.status(400).send({ message: 'Некорректный id' });
-        return;
-      }
-      res
-        .status(500)
-        .send({ message: 'Ошибка сервера' });
+      next(err);
     });
 };
 
-const dislikeCard = (req, res) => {
-  Сard.findByIdAndUpdate(
-    req.params.cardId,
-    { $pull: { likes: req.user._id } },
-    { new: true },
-  )
+const dislikeCard = (req, res, next) => {
+  Сard
+    .findByIdAndUpdate(
+      req.params.cardId,
+      { $pull: { likes: req.user._id } },
+      { new: true },
+    )
     .then((card) => {
       if (!card) {
-        res
-          .status(404)
-          .send({ message: 'Карточка с указанным id не найдена.' });
-        return;
+        const err = new Error('Карточка не найдена');
+        err.statusCode = 404;
+        throw err;
       }
       res.send({ data: card });
     })
     .catch((err) => {
-      if (err.kind === 'ObjectId') {
-        res.status(400).send({ message: 'Некорректный id' });
-        return;
-      }
-      res
-        .status(500)
-        .send({ message: 'Ошибка сервера' });
+      next(err);
     });
 };
 
