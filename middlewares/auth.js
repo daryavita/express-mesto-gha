@@ -11,10 +11,11 @@ const isAuthorized = (req, res, next) => {
     throw err;
   }
 
+  const token = auth.replace('Bearer ', '');
   let payload;
 
   try {
-    payload = jwt.verify(auth, '12341234');
+    payload = jwt.verify(token, '12341234');
   } catch (e) {
     const err = new Error('Ошибка авторизации');
     err.statusCode = 401;

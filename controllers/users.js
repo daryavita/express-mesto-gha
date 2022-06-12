@@ -142,6 +142,8 @@ const login = (req, res, next) => {
       return Promise.all([isPasswordValid, user]);
     })
     .then(([isPasswordValid, user]) => {
+      console.log('isPasswordValid', isPasswordValid);
+
       if (!isPasswordValid) {
         const err = new Error('Email или пароль неверный');
         err.statusCode = 401;
