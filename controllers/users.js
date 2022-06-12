@@ -62,7 +62,16 @@ const createUser = (req, res, next) => {
       password: hash,
     })
       .then((user) => {
-        res.send({ user });
+        const resUser = {
+          name: user.name,
+          about: user.about,
+          avatar: user.avatar,
+          email: user.email,
+          _id: user._id,
+          __v: user.__v,
+        };
+
+        res.send(resUser);
       })
       .catch((err) => {
         if (err.code === MONGO_DUPLICATE_KEY_CODE) {
@@ -124,7 +133,7 @@ const login = (req, res, next) => {
     .then((user) => {
       if (!user) {
         const err = new Error('Email или пароль неверный');
-        err.statusCode = 400;
+        err.statusCode = 401;
         throw err;
       }
 
