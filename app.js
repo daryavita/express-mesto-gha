@@ -5,6 +5,9 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const { celebrate, Joi } = require('celebrate');
 const { errors } = require('celebrate');
+const helmet = require('helmet');
+const { validateURL, putError } = require('./middlewares/errors');
+const NotFoundError = require('./errors/Not-found-err');
 const { userRouter } = require('./routes/users');
 const { cardRouter } = require('./routes/cards');
 const { login, createUser } = require('./controllers/users');
@@ -19,6 +22,7 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
   useUnifiedTopology: true,
 });
 
+app.use(helmet());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -38,9 +42,7 @@ app.post(
     body: Joi.object().keys({
       name: Joi.string().min(2).max(30),
       about: Joi.string().min(2).max(30),
-      avatar: Joi.string().pattern(
-        /(https?:\/\/)(www\.)?[A-z0-9.-]+\.[.A-z]*#?([^\s?#]+)?/,
-      ),
+      avatar: Joi.string().custom(validateURL),
       email: Joi.string().required().email(),
       password: Joi.string().required(),
     }),
@@ -50,24 +52,18 @@ app.post(
 app.use('/users', isAuthorized, userRouter);
 app.use('/cards', isAuthorized, cardRouter);
 
-app.use((req, res, next) => {
-  const err = new Error('Такая страница не найдена');
-  err.statusCode = 404;
-  next(err);
+app.use(isAuthorized, (req, res, next) => {
+  next(new NotFoundError('Такая страница не найдена'));
 });
 
 app.use(errors());
 
-app.use((err, req, res, next) => {
-  if (err.statusCode) {
-    return res
-      .status(err.statusCode)
-      .send({ message: err.message || 'Что-то пошло не так' });
-  }
-  res.status(500).send({ message: 'Ошибка сервера' });
-  return next(err);
-});
+app.use(putError);
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
 });
+
+module.exports = {
+  app,
+};

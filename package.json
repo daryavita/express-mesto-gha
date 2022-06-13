@@ -13,7 +13,7 @@
     "type": "git",
     "url": "git+https://github.com/daryavita/express-mesto-gha.git"
   },
-  "author": "",
+  "author": "Darya Popova <popova.d.v@yandex.ru> (https://github.com/daryavita)",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/daryavita/express-mesto-gha/issues"
@@ -30,6 +30,7 @@
     "body-parser": "^1.20.0",
     "celebrate": "^15.0.1",
     "express": "^4.18.1",
+    "helmet": "^5.1.0",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.13.14",
     "validator": "^13.7.0"

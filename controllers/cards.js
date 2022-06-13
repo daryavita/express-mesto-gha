@@ -1,5 +1,8 @@
 const Сard = require('../models/card');
 
+const ForbiddenError = require('../errors/Forbidden-err');
+const NotFoundError = require('../errors/Not-found-err');
+
 const getCards = (req, res, next) => {
   Сard
     .find({})
@@ -16,18 +19,15 @@ const deleteCard = (req, res, next) => {
     .findById(req.params.cardId)
     .then((card) => {
       if (!card) {
-        const err = new Error('Карточка не найдена');
-        err.statusCode = 404;
-        throw err;
+        throw new NotFoundError('Карточка не найдена');
       }
       const owner = card.owner.toString();
       if (owner !== req.user.id) {
-        const err = new Error('Вы не можете удалить чужую карточку');
-        err.statusCode = 403;
-        throw err;
+        throw new ForbiddenError('Вы не можете удалить чужую карточку');
       }
       Сard.findByIdAndRemove(req.params.cardId).then(() => {
         res.send({ message: 'Карточка удалена' });
+        return Сard.findByIdAndRemove;
       });
     })
     .catch((err) => {
@@ -58,9 +58,7 @@ const likeCard = (req, res, next) => {
     )
     .then((card) => {
       if (!card) {
-        const err = new Error('Карточка не найдена');
-        err.statusCode = 404;
-        throw err;
+        throw new NotFoundError('Карточка не найдена');
       }
       res.send({ data: card });
     })
@@ -78,9 +76,7 @@ const dislikeCard = (req, res, next) => {
     )
     .then((card) => {
       if (!card) {
-        const err = new Error('Карточка не найдена');
-        err.statusCode = 404;
-        throw err;
+        throw new NotFoundError('Карточка не найдена');
       }
       res.send({ data: card });
     })

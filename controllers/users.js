@@ -3,6 +3,10 @@ const bcrypt = require('bcrypt');
 const { generateToken } = require('../middlewares/auth');
 
 const User = require('../models/user');
+const ValidationError = require('../errors/Validation-err');
+const NotFoundError = require('../errors/Not-found-err');
+const ConflictError = require('../errors/Conflict-err');
+const AuthError = require('../errors/Auth-err');
 
 const saltRounds = 10;
 const MONGO_DUPLICATE_KEY_CODE = 11000;
@@ -23,9 +27,7 @@ const getUser = (req, res, next) => {
   User.findById(id)
     .then((user) => {
       if (!user) {
-        const err = new Error('Пользователь по указанному id не найден');
-        err.statusCode = 404;
-        throw err;
+        throw new NotFoundError('Пользователь по указанному id не найден');
       }
       res.send(user);
     })
@@ -48,9 +50,7 @@ const createUser = (req, res, next) => {
   } = req.body;
 
   if (!email || !password) {
-    const err = new Error('Email и пароль обязательны');
-    err.statusCode = 400;
-    throw err;
+    throw new ValidationError('Email и пароль обязательны');
   }
 
   bcrypt.hash(password, saltRounds).then((hash) => {
@@ -74,14 +74,14 @@ const createUser = (req, res, next) => {
       })
       .catch((err) => {
         if (err.code === MONGO_DUPLICATE_KEY_CODE) {
-          const duplicateError = new Error('Этот email уже зарегистрирован');
-          duplicateError.statusCode = 409;
-          return next(duplicateError);
+          return next(new ConflictError('Этот email уже зарегистрирован'));
         }
-
         return next(err);
       });
-  });
+  })
+    .catch((err) => {
+      next(err);
+    });
 };
 
 const updateUser = (req, res, next) => {
@@ -95,9 +95,7 @@ const updateUser = (req, res, next) => {
   )
     .then((user) => {
       if (!user) {
-        const err = new Error('Пользователь по указанному id не найден');
-        err.statusCode = 404;
-        throw err;
+        throw new NotFoundError('Пользователь по указанному id не найден');
       }
       res.send({ data: user });
     })
@@ -113,9 +111,7 @@ const updateAvatar = (req, res, next) => {
   User.findByIdAndUpdate(id, { avatar }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
-        const err = new Error('Пользователь по указанному id не найден');
-        err.statusCode = 404;
-        throw err;
+        throw new NotFoundError('Пользователь по указанному id не найден');
       }
       res.send({ data: user });
     })
@@ -131,9 +127,7 @@ const login = (req, res, next) => {
     .select('+password')
     .then((user) => {
       if (!user) {
-        const err = new Error('Email или пароль неверный');
-        err.statusCode = 401;
-        throw err;
+        throw new AuthError('Email или пароль неверный');
       }
 
       const isPasswordValid = bcrypt.compare(password, user.password);
@@ -142,9 +136,7 @@ const login = (req, res, next) => {
     })
     .then(([isPasswordValid, user]) => {
       if (!isPasswordValid) {
-        const err = new Error('Email или пароль неверный');
-        err.statusCode = 401;
-        throw err;
+        throw new AuthError('Email или пароль неверный');
       }
       return generateToken({ id: user._id });
     })

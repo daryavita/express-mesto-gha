@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { isEmail } = require('validator');
+const { validateURL } = require('../middlewares/errors');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -17,12 +18,7 @@ const userSchema = new mongoose.Schema({
   avatar: {
     type: String,
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
-    validate: {
-      validator(v) {
-        return /(https?:\/\/)(www\.)?[A-z0-9.-]+\.[.A-z]*#?([^\s?#]+)?/.test(v);
-      },
-      message: 'Некорректная ссылка',
-    },
+    validate: validateURL,
   },
   email: {
     type: String,
