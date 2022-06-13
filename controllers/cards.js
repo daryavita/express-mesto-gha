@@ -2,6 +2,7 @@ const Сard = require('../models/card');
 
 const ForbiddenError = require('../errors/Forbidden-err');
 const NotFoundError = require('../errors/Not-found-err');
+const ValidationError = require('../errors/Validation-err');
 
 const getCards = (req, res, next) => {
   Сard
@@ -25,9 +26,8 @@ const deleteCard = (req, res, next) => {
       if (owner !== req.user.id) {
         throw new ForbiddenError('Вы не можете удалить чужую карточку');
       }
-      Сard.findByIdAndRemove(req.params.cardId).then(() => {
+      return Сard.findByIdAndRemove(req.params.cardId).then(() => {
         res.send({ message: 'Карточка удалена' });
-        return Сard.findByIdAndRemove;
       });
     })
     .catch((err) => {
@@ -45,7 +45,11 @@ const createCard = (req, res, next) => {
       res.send({ data: card });
     })
     .catch((err) => {
-      next(err);
+      if (err.name === 'ValidationError') {
+        next(new ValidationError('Некорректные данные при создании карточки'));
+      } else {
+        next(err);
+      }
     });
 };
 

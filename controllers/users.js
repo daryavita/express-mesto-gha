@@ -73,6 +73,9 @@ const createUser = (req, res, next) => {
         res.send(resUser);
       })
       .catch((err) => {
+        if (err.name === 'ValidationError') {
+          next(new ValidationError('Некорректные данные при создании пользователя'));
+        }
         if (err.code === MONGO_DUPLICATE_KEY_CODE) {
           return next(new ConflictError('Этот email уже зарегистрирован'));
         }
@@ -100,7 +103,11 @@ const updateUser = (req, res, next) => {
       res.send({ data: user });
     })
     .catch((err) => {
-      next(err);
+      if (err.name === 'ValidationError') {
+        next(new ValidationError('Некорректные данные при обновлении пользователя'));
+      } else {
+        next(err);
+      }
     });
 };
 
@@ -116,7 +123,11 @@ const updateAvatar = (req, res, next) => {
       res.send({ data: user });
     })
     .catch((err) => {
-      next(err);
+      if (err.name === 'ValidationError') {
+        next(new ValidationError('Некорректные данные при обновлении пользователя'));
+      } else {
+        next(err);
+      }
     });
 };
 
