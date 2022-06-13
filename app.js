@@ -52,9 +52,7 @@ app.post(
 app.use('/users', isAuthorized, userRouter);
 app.use('/cards', isAuthorized, cardRouter);
 
-app.use(isAuthorized, (req, res, next) => {
-  next(new NotFoundError('Такая страница не найдена'));
-});
+app.use(isAuthorized, (req, res, next) => next(new NotFoundError('Такая страница не найдена')));
 
 app.use(errors());
 
@@ -63,7 +61,3 @@ app.use(putError);
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
 });
-
-module.exports = {
-  app,
-};
