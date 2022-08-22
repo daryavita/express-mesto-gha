@@ -1,5 +1,5 @@
-[![Tests](https://github.com/daryavita/express-mesto-gha/actions/workflows/tests-13-sprint.yml/badge.svg)](https://github.com/daryavita/express-mesto-gha/actions/workflows/tests-13-sprint.yml) [![Tests](https://github.com/daryavita/express-mesto-gha/actions/workflows/tests-14-sprint.yml/badge.svg)](https://github.com/daryavita/express-mesto-gha/actions/workflows/tests-14-sprint.yml)
-# Бекэнд часть проекта Mesto
+## API проекта Mesto
+Бекэнд часть проекта Mesto с регистрацией, авторизацией, добавлением карточек и лайками.
 
 ## Директории
 
